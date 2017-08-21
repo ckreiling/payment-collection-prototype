@@ -20,7 +20,7 @@ class UserProfileDetail(APIView):
         """
         Return the serialized information for the user in the request.
         """
-        user_profile = models.UserProfile.objects.get(user_id=request.user.pk)
+        user_profile = models.UserProfile.objects.get(user=request.user)
         serializer = serializers.UserProfileSerializer(data=user_profile)
         # Check that the serialized information is valid!
         serializer.is_valid()
@@ -66,14 +66,16 @@ class PayerDetail(generics.RetrieveUpdateDestroyAPIView):
 
 class CreateTransaction(generics.CreateAPIView):
     def get_queryset(self):
-        return models.Transaction.objects.filter(payer=self.request.data['payer'])
+        user_profile = models.UserProfile.objects.get(user=self.request.user)
+        return models.Transaction.objects.filter(payer__user_profile=user_profile)
 
     serializer_class = serializers.TransactionSerializer
 
 
 class TransactionDetail(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
-        return models.Transaction.objects.filter(payer=self.request.data['payer'])
+        user_profile = models.UserProfile.objects.get(user=self.request.user)
+        return models.Transaction.objects.filter(payer__user_profile=user_profile)
 
     serializer_class = serializers.TransactionSerializer
 
@@ -92,18 +94,22 @@ class CreatePaymentPlanOption(generics.CreateAPIView):
 
 class PaymentPlanOptionDetail(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
-        return models.PaymentPlanOption.objects.filter(user=self.request.user)
+        user_profile = models.UserProfile.objects.get(user=self.request.user)
+        return models.PaymentPlanOption.objects.filter(user_profile=user_profile)
 
     serializer_class = serializers.PaymentPlanOptionSerializer
 
 
 class CreatePayment(generics.CreateAPIView):
-    queryset = models.Payment.objects.all()
+    def get_queryset(self):
+        user_profile = models.UserProfile.objects.get(user=self.request.user)
+        return models.Payment.objects.filter(payment_plan__user_profile=user_profile)
     serializer_class = serializers.PaymentSerializer
 
 
 class PaymentDetail(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
-        return models.Payment.objects.filter(payment_plan=self.request.data['payment_plan'])
+        user_profile = models.UserProfile.objects.get(user=self.request.user)
+        return models.Payment.objects.filter(payment_plan__user_profile=user_profile)
 
     serializer_class = serializers.PaymentSerializer
