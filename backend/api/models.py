@@ -1,5 +1,25 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
+from django.conf import settings
+import random
+import string
+
+
+class SurveyCode:
+    """
+    Callable class for generating a UserProfile's survey code at instantiation
+    """
+    def __call__(self, *args, **kwargs):
+        ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_user_profile_and_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+        UserProfile.objects.create(user=instance)
 
 
 class UserProfile(models.Model):
@@ -10,12 +30,17 @@ class UserProfile(models.Model):
         - Payment Plans
     It also has all of the non-client-facing material attached to it, specifically for Venmo's Oauth2.0 setup.
     """
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    venmo_handle = models.CharField()
-    venmo_auth_token = models.CharField()
-    venmo_refresh_token = models.CharField()
+    user = models.OneToOneField('auth.User', related_name='profile', on_delete=models.CASCADE)
+    venmo_handle = models.CharField(max_length=50)
+    venmo_auth_token = models.CharField(max_length=100)
+    venmo_refresh_token = models.CharField(max_length=100)
     # Random code for the survey that retrieves the organization's users
-    survey_code = models.CharField(unique=True)
+    survey_code = models.CharField(unique=True, default=SurveyCode, max_length=10)
+    """
+    reverse model documentation
+    payers = array of Payer
+    payment_plans = array of PaymentPlanOption
+    """
 
     def __str__(self):
         return self.user.username
@@ -27,10 +52,14 @@ class PaymentPlanOption(models.Model):
     """
     option_name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='payment_plans')
+    """
+    reverse model documentation
+    payments = array of Payment
+    """
 
     class Meta:
-        order_with_respect_to = 'user'
+        order_with_respect_to = 'user_profile'
 
     def __str__(self):
         return self.option_name
@@ -42,9 +71,9 @@ class Payment(models.Model):
     associates many of these with one PaymentPlanOption.
     """
     date_due = models.DateTimeField()
-    amount_due = models.DecimalField(decimal_places=2)
+    amount_due = models.DecimalField(decimal_places=2, max_digits=10)
     # The PaymentPlanOption this payment is associated with
-    payment_plan = models.ForeignKey(PaymentPlanOption, on_delete=models.CASCADE)
+    payment_plan = models.ForeignKey(PaymentPlanOption, null=True, blank=True, on_delete=models.CASCADE, related_name='payments')
 
     class Meta:
         order_with_respect_to = 'payment_plan'
@@ -60,25 +89,25 @@ class Payer(models.Model):
     """
     first_name = models.CharField(max_length=64)
     last_name = models.CharField(max_length=64)
-    payment_plan = models.ForeignKey(PaymentPlanOption)
-    venmo_username = models.CharField(blank=True, unique=True, verbose_name="payer's venmo username")
+    # The payment plan this user is on
+    payment_plan = models.ForeignKey(PaymentPlanOption, on_delete=models.CASCADE, related_name='payers')
+    venmo_username = models.CharField(max_length=50, blank=True, unique=True, verbose_name="payer's venmo username")
     email = models.EmailField()
-    phone_number = models.CharField()
+    phone_number = models.CharField(max_length=20)
     date_created = models.DateTimeField(auto_now_add=True)
     # Information regarding the last time the user had paid
     last_pay_date = models.DateTimeField(null=True, verbose_name="last date the payer paid")
-    last_pay_amount = models.DecimalField(decimal_places=2, null=True, verbose_name="last transaction amount")
+    last_pay_amount = models.DecimalField(decimal_places=2, max_digits=10, null=True, verbose_name="last transaction amount")
     next_pay_date = models.DateTimeField(null=True)
-    next_pay_amount = models.DecimalField(decimal_places=2, null=True)
-    total_paid = models.DecimalField(decimal_places=2, verbose_name="total paid to the organization")
+    next_pay_amount = models.DecimalField(decimal_places=2, max_digits=10, null=True)
     # The user this Payer is identified with
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="payers")
 
     def __str__(self):
         return self.first_name + ' ' + self.last_name + ': ' + self.payment_plan.__str__()
 
     class Meta:
-        order_with_respect_to = 'user'
+        order_with_respect_to = 'user_profile'
 
 
 class Transaction(models.Model):
@@ -86,8 +115,8 @@ class Transaction(models.Model):
     A transaction made by the Payer. One of these is automatically generated whenever a Payer makes a Venmo transaction.
     """
     date = models.DateTimeField(verbose_name="date of transaction")
-    amount = models.DecimalField(decimal_places=2, verbose_name="transaction amount")
-    payer = models.ForeignKey(Payer, on_delete=models.CASCADE)
+    amount = models.DecimalField(decimal_places=2, max_digits=10, verbose_name="transaction amount")
+    payer = models.ForeignKey(Payer, on_delete=models.CASCADE, related_name="transactions")
 
     class Meta:
         order_with_respect_to = 'payer'
