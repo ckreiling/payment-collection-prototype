@@ -37,11 +37,11 @@ export const fetchToken = (username, password) => dispatch => {
   }
 
   return axios.post(URL + LOGIN, data)
-  .then(function (response) {
-    const token = response.data.token
-    dispatch(receiveToken(token))
-  })
-  .catch(function (error) {
-    dispatch(receiveError(error))
-  })
+    .then(function (response) {
+      const token = response.data.token
+      dispatch(receiveToken(token))
+    })
+    .catch(function (error) {
+      dispatch(receiveError(error))
+    })
 }

@@ -3,7 +3,6 @@ import PropTypes from 'prop-types'
 import {connect} from 'react-redux'
 
 import {deleteToken} from "../actions/index"
-import Login from "./Login"
 
 class _LoginStatus extends React.Component {
 

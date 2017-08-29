@@ -2,7 +2,7 @@ import React, {Component} from 'react'
 import {applyMiddleware, combineReducers, compose, createStore} from 'redux'
 import {createLogger} from 'redux-logger'
 import {Provider} from 'react-redux'
-import thunk from 'redux-thunk';
+import thunk from 'redux-thunk'
 import {autoRehydrate, persistStore} from 'redux-persist'
 import {loginReducer} from './login/reducers'
 
