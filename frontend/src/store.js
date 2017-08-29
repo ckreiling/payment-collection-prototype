@@ -4,11 +4,11 @@ import {createLogger} from 'redux-logger'
 import {Provider} from 'react-redux'
 import thunk from 'redux-thunk'
 import {autoRehydrate, persistStore} from 'redux-persist'
-import {loginReducer} from './login/reducers'
+import {login} from './login/reducers'
 
 import App from './App'
 
-const rootReducer = combineReducers(loginReducer)
+const rootReducer = combineReducers({login})
 
 export const store = createStore(
   rootReducer,

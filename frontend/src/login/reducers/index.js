@@ -1,7 +1,11 @@
 import * as actionType from '../actions/types'
 
-const tokenInitialState = null
-export const loginReducer = (state = {token: tokenInitialState, isFetching: false}, action) => {
+const initialState = {
+  token: null,
+  isFetching: false
+}
+
+export const login = (state = initialState, action) => {
   switch (action.type) {
     case actionType.REQUEST_TOKEN:
       return {
@@ -22,11 +26,7 @@ export const loginReducer = (state = {token: tokenInitialState, isFetching: fals
         isFetching: false
       }
     case actionType.DELETE_TOKEN:
-      return {
-        token: tokenInitialState,
-        isFetching: false,
-        dateReceived: null
-      }
+      return initialState
     default:
       return state
   }

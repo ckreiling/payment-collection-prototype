@@ -16,7 +16,7 @@ class _AuthenticatedRoute extends React.Component {
 
   static propTypes = {
     loggedIn: PropTypes.bool.isRequired,
-    component: PropTypes.instanceOf(React.Component).isRequired
+    component: PropTypes.func.isRequired
   }
 
   render = () => {

@@ -1,4 +1,5 @@
 import * as actionType from './types'
+import axios from 'axios'
 import {LOGIN, URL} from '../../ApiClient'
 
 
@@ -41,7 +42,9 @@ export const fetchToken = (username, password) => dispatch => {
       const token = response.data.token
       dispatch(receiveToken(token))
     })
+/*
     .catch(function (error) {
       dispatch(receiveError(error))
     })
+*/
 }
