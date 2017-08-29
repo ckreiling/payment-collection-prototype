@@ -9,7 +9,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -23,12 +22,15 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('first_name', models.CharField(max_length=64)),
                 ('last_name', models.CharField(max_length=64)),
-                ('venmo_username', models.CharField(blank=True, max_length=50, unique=True, verbose_name="payer's venmo username")),
+                ('venmo_username',
+                 models.CharField(blank=True, max_length=50, unique=True, verbose_name="payer's venmo username")),
                 ('email', models.EmailField(max_length=254)),
                 ('phone_number', models.CharField(max_length=20)),
                 ('date_created', models.DateTimeField(auto_now_add=True)),
                 ('last_pay_date', models.DateTimeField(null=True, verbose_name='last date the payer paid')),
-                ('last_pay_amount', models.DecimalField(decimal_places=2, max_digits=10, null=True, verbose_name='last transaction amount')),
+                ('last_pay_amount',
+                 models.DecimalField(decimal_places=2, max_digits=10, null=True,
+                                     verbose_name='last transaction amount')),
                 ('next_pay_date', models.DateTimeField(null=True)),
                 ('next_pay_amount', models.DecimalField(decimal_places=2, max_digits=10, null=True)),
             ],
@@ -55,7 +57,9 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date', models.DateTimeField(verbose_name='date of transaction')),
                 ('amount', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='transaction amount')),
-                ('payer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transactions', to='api.Payer')),
+                ('payer',
+                 models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transactions',
+                                   to='api.Payer')),
             ],
         ),
         migrations.CreateModel(
@@ -66,28 +70,33 @@ class Migration(migrations.Migration):
                 ('venmo_auth_token', models.CharField(max_length=100)),
                 ('venmo_refresh_token', models.CharField(max_length=100)),
                 ('survey_code', models.CharField(default=api.models.SurveyCode, max_length=10, unique=True)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile', to=settings.AUTH_USER_MODEL)),
+                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile',
+                                              to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.AddField(
             model_name='paymentplanoption',
             name='user_profile',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='payment_plans', to='api.UserProfile'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='payment_plans',
+                                    to='api.UserProfile'),
         ),
         migrations.AddField(
             model_name='payment',
             name='payment_plan',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='payments', to='api.PaymentPlanOption'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='payments', to='api.PaymentPlanOption'),
         ),
         migrations.AddField(
             model_name='payer',
             name='payment_plan',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='payers', to='api.PaymentPlanOption'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='payers',
+                                    to='api.PaymentPlanOption'),
         ),
         migrations.AddField(
             model_name='payer',
             name='user_profile',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='payers', to='api.UserProfile'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='payers',
+                                    to='api.UserProfile'),
         ),
         migrations.AlterOrderWithRespectTo(
             name='transaction',

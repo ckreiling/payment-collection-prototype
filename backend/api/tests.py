@@ -1,10 +1,12 @@
+import datetime
+
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
-import datetime
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+
 from . import models
-from django.contrib.auth.models import User
 
 
 class TestCreateEndpoints(TestCase):
@@ -103,6 +105,14 @@ class TestRetrieveEndpoints(TestCase):
         self.token = Token.objects.get(user__username='test_user')
         self.client = APIClient()
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+
+    def test_get_auth_token(self):
+        data = {
+            'username': self.user_profile.user.username,
+            'password': 'secret'
+        }
+        request = self.client.post(reverse('api:auth'), data=data)
+        assert request.status_code == 200
 
     def test_retrieve_user(self):
         request = self.client.get(reverse('api:user'))

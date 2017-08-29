@@ -104,6 +104,7 @@ class CreatePayment(generics.CreateAPIView):
     def get_queryset(self):
         user_profile = models.UserProfile.objects.get(user=self.request.user)
         return models.Payment.objects.filter(payment_plan__user_profile=user_profile)
+
     serializer_class = serializers.PaymentSerializer
 
 

@@ -11,12 +11,16 @@ class SurveyCode:
     """
     Callable class for generating a UserProfile's survey code at instantiation
     """
+
     def __call__(self, *args, **kwargs):
         ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_user_profile_and_auth_token(sender, instance=None, created=False, **kwargs):
+    """
+    Fun pub-sub for generating both a Token and UserProfile for each User creation
+    """
     if created:
         Token.objects.create(user=instance)
         UserProfile.objects.create(user=instance)
@@ -29,11 +33,14 @@ class UserProfile(models.Model):
         - Payers
         - Payment Plans
     It also has all of the non-client-facing material attached to it, specifically for Venmo's Oauth2.0 setup.
+    These models are built for a Venmo developer API that has unfortunately been deprecated. Until
+    there is a developer API available, the OAuth2.0 tokens will be left blank. This will clear up
+    possible database migration issues when Venmo brings their API back online for new applications.
     """
     user = models.OneToOneField('auth.User', related_name='profile', on_delete=models.CASCADE)
     venmo_handle = models.CharField(max_length=50)
-    venmo_auth_token = models.CharField(max_length=100)
-    venmo_refresh_token = models.CharField(max_length=100)
+    venmo_auth_token = models.CharField(max_length=100, blank=True)
+    venmo_refresh_token = models.CharField(max_length=100, blank=True)
     # Random code for the survey that retrieves the organization's users
     survey_code = models.CharField(unique=True, default=SurveyCode, max_length=10)
     """
@@ -73,7 +80,8 @@ class Payment(models.Model):
     date_due = models.DateTimeField()
     amount_due = models.DecimalField(decimal_places=2, max_digits=10)
     # The PaymentPlanOption this payment is associated with
-    payment_plan = models.ForeignKey(PaymentPlanOption, null=True, blank=True, on_delete=models.CASCADE, related_name='payments')
+    payment_plan = models.ForeignKey(PaymentPlanOption, null=True, blank=True, on_delete=models.CASCADE,
+                                     related_name='payments')
 
     class Meta:
         order_with_respect_to = 'payment_plan'
@@ -97,7 +105,8 @@ class Payer(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     # Information regarding the last time the user had paid
     last_pay_date = models.DateTimeField(null=True, verbose_name="last date the payer paid")
-    last_pay_amount = models.DecimalField(decimal_places=2, max_digits=10, null=True, verbose_name="last transaction amount")
+    last_pay_amount = models.DecimalField(decimal_places=2, max_digits=10, null=True,
+                                          verbose_name="last transaction amount")
     next_pay_date = models.DateTimeField(null=True)
     next_pay_amount = models.DecimalField(decimal_places=2, max_digits=10, null=True)
     # The user this Payer is identified with
